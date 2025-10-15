@@ -209,7 +209,7 @@ BACKEND_ENVIRONMENT="$BACKEND_ENVIRONMENT"'}'
 # Backend buildspec
 BACKEND_SOURCE='{
   "type":"GITHUB",
-  "location":"https://github.com/cfuttere/IT-429-Project-pdf2html-UI",
+  "location":"https://github.com/cfuttere/IT-429-Project-pdf2html-UI.git",
   "buildspec":"buildspec.yml"
 }'
 
