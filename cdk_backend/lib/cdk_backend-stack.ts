@@ -128,11 +128,12 @@ export class CdkBackendStack extends cdk.Stack {
 
       autoVerify: { email: true },
       passwordPolicy: {
-        minLength: 8,
+        minLength: 12, // Changed from 8 to 12
         requireLowercase: true,
         requireDigits: true,
-        requireSymbols: false,
-        requireUppercase: false,
+        requireSymbols: true, // CHANGE
+        requireUppercase: true, // CHANGE
+        temporaryPasswordValidity: 7, // CHANGE
       },
       standardAttributes: {
         email: { required: true, mutable: true },
