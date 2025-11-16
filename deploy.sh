@@ -208,9 +208,10 @@ fi
 BACKEND_ENVIRONMENT="$BACKEND_ENVIRONMENT"'}'
 
 # Backend buildspec
+# Testing changed location for cloudshell deployment
 BACKEND_SOURCE='{
   "type":"GITHUB",
-  "location":"https://github.com/ASUCICREPO/PDF_accessability_UI.git",
+  "location":"https://github.com/cfuttere/IT-429-Project-pdf2html-UI.git",
   "buildspec":"buildspec.yml"
 }'
 
