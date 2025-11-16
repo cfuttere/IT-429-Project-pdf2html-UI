@@ -11,6 +11,7 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as cloudtrail from 'aws-cdk-lib/aws-cloudtrail';
+import * as kms from 'aws-cdk-lib/aws-kms';
 
 export class CdkBackendStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -415,9 +416,63 @@ export class CdkBackendStack extends cdk.Stack {
     });
 
 
+    // Create KMS key for CloudTrail encryption
+    const cloudTrailKey = new kms.Key(this, 'CloudTrailKey', {
+      description: 'KMS key for CloudTrail log encryption',
+      enableKeyRotation: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // Add CloudTrail service permissions to the KMS key
+    cloudTrailKey.addToResourcePolicy(new iam.PolicyStatement({
+      sid: 'Allow CloudTrail to encrypt logs',
+      effect: iam.Effect.ALLOW,
+      principals: [new iam.ServicePrincipal('cloudtrail.amazonaws.com')],
+      actions: ['kms:GenerateDataKey*', 'kms:DecryptDataKey'],
+      resources: ['*'],
+      conditions: {
+        StringLike: {
+          'kms:EncryptionContext:aws:cloudtrail:arn': `arn:aws:cloudtrail:*:${this.account}:trail/*`,
+        },
+      },
+    }));
+
+    cloudTrailKey.addToResourcePolicy(new iam.PolicyStatement({
+      sid: 'Allow CloudTrail to describe key',
+      effect: iam.Effect.ALLOW,
+      principals: [new iam.ServicePrincipal('cloudtrail.amazonaws.com')],
+      actions: ['kms:DescribeKey'],
+      resources: ['*'],
+    }));
+
+    cloudTrailKey.addToResourcePolicy(new iam.PolicyStatement({
+      sid: 'Allow principals in the account to decrypt log files',
+      effect: iam.Effect.ALLOW,
+      principals: [new iam.AccountPrincipal(this.account)],
+      actions: ['kms:Decrypt', 'kms:ReEncryptFrom'],
+      resources: ['*'],
+      conditions: {
+        StringEquals: {
+          'kms:CallerAccount': this.account,
+        },
+        StringLike: {
+          'kms:EncryptionContext:aws:cloudtrail:arn': `arn:aws:cloudtrail:*:${this.account}:trail/*`,
+        },
+      },
+    }));
+
+    cloudTrailKey.addToResourcePolicy(new iam.PolicyStatement({
+      sid: 'Allow alias creation during setup',
+      effect: iam.Effect.ALLOW,
+      principals: [new iam.AccountPrincipal(this.account)],
+      actions: ['kms:CreateAlias'],
+      resources: ['*'],
+    }));
+
     const cognitoTrail = new cloudtrail.Trail(this, 'CognitoTrail', {
       isMultiRegionTrail: true,
       includeGlobalServiceEvents: true,
+      encryptionKey: cloudTrailKey,
     });
     
     // Remove the incorrect event selector
@@ -465,6 +520,16 @@ export class CdkBackendStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'CheckUploadQuotaEndpoint', {
       value: updateAttributesApi.urlForPath('/upload-quota'),
+    });
+
+    new cdk.CfnOutput(this, 'CloudTrailKeyId', {
+      value: cloudTrailKey.keyId,
+      description: 'KMS Key ID used for CloudTrail encryption',
+    });
+
+    new cdk.CfnOutput(this, 'CloudTrailKeyArn', {
+      value: cloudTrailKey.keyArn,
+      description: 'KMS Key ARN used for CloudTrail encryption',
     });
 
 
