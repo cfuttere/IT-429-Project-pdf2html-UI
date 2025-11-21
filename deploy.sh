@@ -157,89 +157,103 @@ else
   #   ]
   # }'
   
-  CUSTOM_POLICY='{
-  "Version": "2012-10-17",
-  "Statement": [
+# Build S3 resource list safely (prevents invalid ARNs)
+S3_RESOURCES="\"arn:aws:s3:::cdk-*\", \"arn:aws:s3:::cdk-*/*\""
 
+if [[ -n "${PDF_TO_PDF_BUCKET:-}" ]]; then
+  S3_RESOURCES="$S3_RESOURCES, \"arn:aws:s3:::$PDF_TO_PDF_BUCKET\", \"arn:aws:s3:::$PDF_TO_PDF_BUCKET/*\""
+fi
+
+if [[ -n "${PDF_TO_HTML_BUCKET:-}" ]]; then
+  S3_RESOURCES="$S3_RESOURCES, \"arn:aws:s3:::$PDF_TO_HTML_BUCKET\", \"arn:aws:s3:::$PDF_TO_HTML_BUCKET/*\""
+fi
+
+CUSTOM_POLICY="{
+  \"Version\": \"2012-10-17\",
+  \"Statement\": [
     {
-      "Effect": "Allow",
-      "Action": "sts:GetCallerIdentity",
-      "Resource": "*"
+      \"Sid\": \"STSBasicAccess\",
+      \"Effect\": \"Allow\",
+      \"Action\": [ \"sts:GetCallerIdentity\" ],
+      \"Resource\": \"*\"
     },
-
     {
-      "Effect": "Allow",
-      "Action": "sts:AssumeRole",
-      "Resource": "arn:aws:iam::*:role/cdk-*"
+      \"Sid\": \"AssumeCDKRoles\",
+      \"Effect\": \"Allow\",
+      \"Action\": [ \"sts:AssumeRole\" ],
+      \"Resource\": \"arn:aws:iam::*:role/cdk-*\"
     },
-
     {
-      "Effect": "Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:PutObject",
-        "s3:DeleteObject",
-        "s3:ListBucket",
-        "s3:GetBucketLocation"
+      \"Sid\": \"S3Access\",
+      \"Effect\": \"Allow\",
+      \"Action\": [
+        \"s3:GetObject\",
+        \"s3:PutObject\",
+        \"s3:DeleteObject\",
+        \"s3:ListBucket\",
+        \"s3:GetBucketLocation\"
       ],
-      "Resource": [
-        "arn:aws:s3:::cdk-*",
-        "arn:aws:s3:::cdk-*/*"
+      \"Resource\": [ $S3_RESOURCES ]
+    },
+    {
+      \"Sid\": \"CloudFormationForCDK\",
+      \"Effect\": \"Allow\",
+      \"Action\": [
+        \"cloudformation:CreateStack\",
+        \"cloudformation:UpdateStack\",
+        \"cloudformation:DeleteStack\",
+        \"cloudformation:DescribeStacks\",
+        \"cloudformation:DescribeStackEvents\",
+        \"cloudformation:DescribeStackResources\",
+        \"cloudformation:GetTemplate\",
+        \"cloudformation:ValidateTemplate\",
+        \"cloudformation:CreateChangeSet\",
+        \"cloudformation:DescribeChangeSet\",
+        \"cloudformation:ExecuteChangeSet\",
+        \"cloudformation:DeleteChangeSet\"
+      ],
+      \"Resource\": \"*\"
+    },
+    {
+      \"Sid\": \"LogsForCodeBuildAndLambda\",
+      \"Effect\": \"Allow\",
+      \"Action\": [
+        \"logs:CreateLogGroup\",
+        \"logs:CreateLogStream\",
+        \"logs:PutLogEvents\",
+        \"logs:DescribeLogGroups\",
+        \"logs:DescribeLogStreams\"
+      ],
+      \"Resource\": [
+        \"arn:aws:logs:*:*:log-group:/aws/codebuild/*\",
+        \"arn:aws:logs:*:*:log-group:/aws/lambda/*\"
       ]
     },
-
     {
-      "Effect": "Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:PutObject",
-        "s3:DeleteObject",
-        "s3:ListBucket"
+      \"Sid\": \"SSMParametersForCDK\",
+      \"Effect\": \"Allow\",
+      \"Action\": [
+        \"ssm:GetParameter\",
+        \"ssm:GetParameters\"
       ],
-      "Resource": [
-        "arn:aws:s3:::${PDF_TO_PDF_BUCKET}",
-        "arn:aws:s3:::${PDF_TO_PDF_BUCKET}/*",
-        "arn:aws:s3:::${PDF_TO_HTML_BUCKET}",
-        "arn:aws:s3:::${PDF_TO_HTML_BUCKET}/*"
+      \"Resource\": \"arn:aws:ssm:*:*:parameter/cdk-bootstrap/*\"
+    },
+    {
+      \"Sid\": \"AmplifyDeploymentAccess\",
+      \"Effect\": \"Allow\",
+      \"Action\": [
+        \"amplify:CreateDeployment\",
+        \"amplify:StartDeployment\",
+        \"amplify:UpdateBranch\"
+      ],
+      \"Resource\": [
+        \"arn:aws:amplify:*:*:apps/*\",
+        \"arn:aws:amplify:*:*:apps/*/branches/*\"
       ]
-    },
-
-    {
-      "Effect": "Allow",
-      "Action": [
-        "cloudformation:CreateStack",
-        "cloudformation:UpdateStack",
-        "cloudformation:DeleteStack",
-        "cloudformation:DescribeStacks",
-        "cloudformation:DescribeStackEvents",
-        "cloudformation:GetTemplate",
-        "cloudformation:ValidateTemplate",
-        "cloudformation:DescribeChangeSet",
-        "cloudformation:ExecuteChangeSet"
-      ],
-      "Resource": "*"
-    },
-
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ssm:GetParameter",
-        "ssm:GetParameters"
-      ],
-      "Resource": "arn:aws:ssm:*:*:parameter/cdk-bootstrap/*"
-    },
-
-    {
-      "Effect": "Allow",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "*"
     }
   ]
-}'
+}"
+
 
   aws iam put-role-policy \
     --role-name "$ROLE_NAME" \
