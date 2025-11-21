@@ -306,7 +306,7 @@ else
         "cloudformation:ExecuteChangeSet",
         "cloudformation:DeleteChangeSet"
       ],
-      "Resource": "arn:aws:cloudformation:*:850385020924:stack/CdkBackendStack/*"
+      "Resource": "arn:aws:cloudformation:*:850385020924:stack/*"
     },
     {
       "Sid": "CloudTrailAccess",
