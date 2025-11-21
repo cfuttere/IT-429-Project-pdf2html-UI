@@ -161,119 +161,16 @@ else
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "AmplifyAccess",
       "Effect": "Allow",
-      "Action": [
-        "amplify:CreateApp",
-        "amplify:UpdateApp",
-        "amplify:DeleteApp",
-        "amplify:GetApp",
-        "amplify:ListApps",
-        "amplify:CreateBranch",
-        "amplify:UpdateBranch",
-        "amplify:DeleteBranch",
-        "amplify:GetBranch",
-        "amplify:ListBranches",
-        "amplify:CreateDeployment",
-        "amplify:StartDeployment"
-      ],
-      "Resource": "arn:aws:amplify:*:850385020924:apps/*"
-    },
-    {
-      "Sid": "CognitoAccess",
-      "Effect": "Allow",
-      "Action": [
-        "cognito-idp:CreateUserPool",
-        "cognito-idp:UpdateUserPool",
-        "cognito-idp:DeleteUserPool",
-        "cognito-idp:DescribeUserPool",
-        "cognito-idp:CreateUserPoolClient",
-        "cognito-idp:UpdateUserPoolClient",
-        "cognito-idp:DeleteUserPoolClient",
-        "cognito-idp:CreateUserPoolDomain",
-        "cognito-idp:DeleteUserPoolDomain",
-        "cognito-idp:CreateGroup",
-        "cognito-idp:DeleteGroup",
-        "cognito-idp:AdminAddUserToGroup",
-        "cognito-idp:AdminRemoveUserFromGroup",
-        "cognito-identity:CreateIdentityPool",
-        "cognito-identity:UpdateIdentityPool",
-        "cognito-identity:DeleteIdentityPool",
-        "cognito-identity:DescribeIdentityPool",
-        "cognito-identity:SetIdentityPoolRoles"
-      ],
-      "Resource": [
-        "arn:aws:cognito-idp:*:850385020924:userpool/*",
-        "arn:aws:cognito-identity:*:850385020924:identitypool/*"
-      ]
-    },
-    {
-      "Sid": "LambdaAccess",
-      "Effect": "Allow",
-      "Action": [
-        "lambda:CreateFunction",
-        "lambda:UpdateFunctionCode",
-        "lambda:UpdateFunctionConfiguration",
-        "lambda:DeleteFunction",
-        "lambda:GetFunction",
-        "lambda:ListFunctions",
-        "lambda:AddPermission",
-        "lambda:RemovePermission",
-        "lambda:InvokeFunction",
-        "lambda:PublishVersion",
-        "lambda:CreateAlias",
-        "lambda:UpdateAlias"
-      ],
-      "Resource": "arn:aws:lambda:*:850385020924:function:*"
-    },
-    {
-      "Sid": "APIGatewayAccess",
-      "Effect": "Allow",
-      "Action": [
-        "apigateway:POST",
-        "apigateway:GET",
-        "apigateway:PUT",
-        "apigateway:DELETE",
-        "apigateway:PATCH"
-      ],
-      "Resource": "arn:aws:apigateway:*::/*"
-    },
-    
-    {
-      "Sid": "IAMCreateOperations",
-      "Effect": "Allow",
-      "Action": [
-        "iam:CreateRole",
-        "iam:CreatePolicy"
-      ],
+      "Action": "sts:GetCallerIdentity",
       "Resource": "*"
     },
-
     {
-      "Sid": "IAMManageProjectRoles",
       "Effect": "Allow",
-      "Action": [
-        "iam:GetRole",
-        "iam:DeleteRole",
-        "iam:PassRole",
-        "iam:AttachRolePolicy",
-        "iam:DetachRolePolicy",
-        "iam:PutRolePolicy",
-        "iam:DeleteRolePolicy",
-        "iam:GetRolePolicy",
-        "iam:DeletePolicy",
-        "iam:GetPolicy",
-        "iam:GetPolicyVersion",
-        "iam:ListPolicyVersions"
-      ],
-      "Resource": [
-        "arn:aws:iam::850385020924:role/pdf-ui-*",
-        "arn:aws:iam::850385020924:policy/pdf-ui-*"
-      ]
+      "Action": "sts:AssumeRole",
+      "Resource": "arn:aws:iam::*:role/cdk-*"
     },
-
     {
-      "Sid": "S3BucketAccess",
       "Effect": "Allow",
       "Action": [
         "s3:GetObject",
@@ -283,14 +180,11 @@ else
         "s3:GetBucketLocation"
       ],
       "Resource": [
-        "arn:aws:s3:::pdfaccessibility-pdfaccessibilitybucket149b7021e-im7hopol1lmr",
-        "arn:aws:s3:::pdfaccessibility-pdfaccessibilitybucket149b7021e-im7hopol1lmr/*",
-        "arn:aws:s3:::pdf2html-bucket-850385020924-us-east-1",
-        "arn:aws:s3:::pdf2html-bucket-850385020924-us-east-1/*"
+        "arn:aws:s3:::cdk-*",
+        "arn:aws:s3:::cdk-*/*"
       ]
     },
     {
-      "Sid": "CloudFormationAccess",
       "Effect": "Allow",
       "Action": [
         "cloudformation:CreateStack",
@@ -298,73 +192,20 @@ else
         "cloudformation:DeleteStack",
         "cloudformation:DescribeStacks",
         "cloudformation:DescribeStackEvents",
-        "cloudformation:DescribeStackResources",
-        "cloudformation:GetTemplate",
-        "cloudformation:ValidateTemplate",
-        "cloudformation:CreateChangeSet",
         "cloudformation:DescribeChangeSet",
         "cloudformation:ExecuteChangeSet",
-        "cloudformation:DeleteChangeSet"
+        "cloudformation:GetTemplate",
+        "cloudformation:ValidateTemplate"
       ],
-      "Resource": "arn:aws:cloudformation:*:850385020924:stack/*"
-    },
-    {
-      "Sid": "CloudTrailAccess",
-      "Effect": "Allow",
-      "Action": [
-        "cloudtrail:CreateTrail",
-        "cloudtrail:UpdateTrail",
-        "cloudtrail:DeleteTrail",
-        "cloudtrail:DescribeTrails",
-        "cloudtrail:StartLogging",
-        "cloudtrail:StopLogging",
-        "cloudtrail:PutEventSelectors"
-      ],
-      "Resource": "arn:aws:cloudtrail:*:850385020924:trail/*"
-    },
-    {
-      "Sid": "EventBridgeAccess",
-      "Effect": "Allow",
-      "Action": [
-        "events:PutRule",
-        "events:DeleteRule",
-        "events:DescribeRule",
-        "events:PutTargets",
-        "events:RemoveTargets",
-        "events:ListTargetsByRule"
-      ],
-      "Resource": "arn:aws:events:*:850385020924:rule/*"
-    },
-    {
-      "Sid": "CloudWatchLogsAccess",
-      "Effect": "Allow",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogGroups",
-        "logs:DescribeLogStreams",
-        "logs:DeleteLogGroup"
-      ],
-      "Resource": [
-        "arn:aws:logs:*:850385020924:log-group:/aws/lambda/*",
-        "arn:aws:logs:*:850385020924:log-group:/aws/codebuild/*"
-      ]
-    },
-    {
-      "Sid": "STSAccess",
-      "Effect": "Allow",
-      "Action": ["sts:GetCallerIdentity"],
       "Resource": "*"
     },
     {
-      "Sid": "SSMBootstrapAccess",
       "Effect": "Allow",
       "Action": [
         "ssm:GetParameter",
         "ssm:GetParameters"
       ],
-      "Resource": "arn:aws:ssm:*:850385020924:parameter/cdk-bootstrap/*"
+      "Resource": "arn:aws:ssm:*:*:parameter/cdk-bootstrap/*"
     }
   ]
 }'
