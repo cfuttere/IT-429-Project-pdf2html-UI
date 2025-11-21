@@ -160,16 +160,19 @@ else
   CUSTOM_POLICY='{
   "Version": "2012-10-17",
   "Statement": [
+
     {
       "Effect": "Allow",
       "Action": "sts:GetCallerIdentity",
       "Resource": "*"
     },
+
     {
       "Effect": "Allow",
       "Action": "sts:AssumeRole",
       "Resource": "arn:aws:iam::*:role/cdk-*"
     },
+
     {
       "Effect": "Allow",
       "Action": [
@@ -184,6 +187,23 @@ else
         "arn:aws:s3:::cdk-*/*"
       ]
     },
+
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::${PDF_TO_PDF_BUCKET}",
+        "arn:aws:s3:::${PDF_TO_PDF_BUCKET}/*",
+        "arn:aws:s3:::${PDF_TO_HTML_BUCKET}",
+        "arn:aws:s3:::${PDF_TO_HTML_BUCKET}/*"
+      ]
+    },
+
     {
       "Effect": "Allow",
       "Action": [
@@ -192,13 +212,14 @@ else
         "cloudformation:DeleteStack",
         "cloudformation:DescribeStacks",
         "cloudformation:DescribeStackEvents",
-        "cloudformation:DescribeChangeSet",
-        "cloudformation:ExecuteChangeSet",
         "cloudformation:GetTemplate",
-        "cloudformation:ValidateTemplate"
+        "cloudformation:ValidateTemplate",
+        "cloudformation:DescribeChangeSet",
+        "cloudformation:ExecuteChangeSet"
       ],
       "Resource": "*"
     },
+
     {
       "Effect": "Allow",
       "Action": [
@@ -206,6 +227,16 @@ else
         "ssm:GetParameters"
       ],
       "Resource": "arn:aws:ssm:*:*:parameter/cdk-bootstrap/*"
+    },
+
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "*"
     }
   ]
 }'
