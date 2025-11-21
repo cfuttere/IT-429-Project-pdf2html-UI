@@ -74,80 +74,295 @@ else
     --query 'Role.Arn' --output text)
 
   echo "Attaching custom deployment policy..."
+  # FIXED: Restricted IAM permissions to only necessary actions and resources
+  # Original policy granted full access (*) to all services on all resources (*)
+  ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+  REGION=$(aws configure get region || echo "us-east-1")
+  
+  # ORIGINAL CODE - REMOVED (Security Issue: Overly Permissive - Full Access to All Resources)
+  # CUSTOM_POLICY='{
+  #   "Version": "2012-10-17",
+  #   "Statement": [
+  #       {
+  #           "Sid": "AmplifyFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["amplify:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "CognitoFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["cognito-idp:*", "cognito-identity:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "LambdaFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["lambda:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "APIGatewayFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["apigateway:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "IAMFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["iam:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "S3FullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["s3:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "SecretsManagerFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["secretsmanager:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "CloudFormationFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["cloudformation:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "CloudTrailFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["cloudtrail:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "EventsFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["events:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "CloudWatchLogsFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["logs:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "STSAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["sts:GetCallerIdentity", "sts:AssumeRole"],
+  #           "Resource": "*"
+  #       }
+  #   ]
+  # }'
+  
   CUSTOM_POLICY='{
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "AmplifyFullAccess",
+            "Sid": "AmplifyAccess",
             "Effect": "Allow",
-            "Action": ["amplify:*"],
-            "Resource": "*"
+            "Action": [
+                "amplify:CreateApp",
+                "amplify:UpdateApp",
+                "amplify:DeleteApp",
+                "amplify:GetApp",
+                "amplify:ListApps",
+                "amplify:CreateBranch",
+                "amplify:UpdateBranch",
+                "amplify:DeleteBranch",
+                "amplify:GetBranch",
+                "amplify:ListBranches",
+                "amplify:CreateDeployment",
+                "amplify:StartDeployment",
+                "amplify:UpdateBranch"
+            ],
+            "Resource": "arn:aws:amplify:'"$REGION"':'"$ACCOUNT_ID"':apps/*"
         },
         {
-            "Sid": "CognitoFullAccess",
+            "Sid": "CognitoAccess",
             "Effect": "Allow",
-            "Action": ["cognito-idp:*", "cognito-identity:*"],
-            "Resource": "*"
+            "Action": [
+                "cognito-idp:CreateUserPool",
+                "cognito-idp:UpdateUserPool",
+                "cognito-idp:DeleteUserPool",
+                "cognito-idp:DescribeUserPool",
+                "cognito-idp:CreateUserPoolClient",
+                "cognito-idp:UpdateUserPoolClient",
+                "cognito-idp:DeleteUserPoolClient",
+                "cognito-idp:CreateUserPoolDomain",
+                "cognito-idp:DeleteUserPoolDomain",
+                "cognito-idp:CreateGroup",
+                "cognito-idp:DeleteGroup",
+                "cognito-idp:AdminAddUserToGroup",
+                "cognito-idp:AdminRemoveUserFromGroup",
+                "cognito-identity:CreateIdentityPool",
+                "cognito-identity:UpdateIdentityPool",
+                "cognito-identity:DeleteIdentityPool",
+                "cognito-identity:DescribeIdentityPool",
+                "cognito-identity:SetIdentityPoolRoles"
+            ],
+            "Resource": [
+                "arn:aws:cognito-idp:'"$REGION"':'"$ACCOUNT_ID"':userpool/*",
+                "arn:aws:cognito-identity:'"$REGION"':'"$ACCOUNT_ID"':identitypool/*"
+            ]
         },
         {
-            "Sid": "LambdaFullAccess",
+            "Sid": "LambdaAccess",
             "Effect": "Allow",
-            "Action": ["lambda:*"],
-            "Resource": "*"
+            "Action": [
+                "lambda:CreateFunction",
+                "lambda:UpdateFunctionCode",
+                "lambda:UpdateFunctionConfiguration",
+                "lambda:DeleteFunction",
+                "lambda:GetFunction",
+                "lambda:ListFunctions",
+                "lambda:AddPermission",
+                "lambda:RemovePermission",
+                "lambda:InvokeFunction",
+                "lambda:PublishVersion",
+                "lambda:CreateAlias",
+                "lambda:UpdateAlias"
+            ],
+            "Resource": "arn:aws:lambda:'"$REGION"':'"$ACCOUNT_ID"':function:*"
         },
         {
-            "Sid": "APIGatewayFullAccess",
+            "Sid": "APIGatewayAccess",
             "Effect": "Allow",
-            "Action": ["apigateway:*"],
-            "Resource": "*"
+            "Action": [
+                "apigateway:POST",
+                "apigateway:GET",
+                "apigateway:PUT",
+                "apigateway:DELETE",
+                "apigateway:PATCH"
+            ],
+            "Resource": "arn:aws:apigateway:'"$REGION"'::/*"
         },
         {
-            "Sid": "IAMFullAccess",
+            "Sid": "IAMRoleAccess",
             "Effect": "Allow",
-            "Action": ["iam:*"],
-            "Resource": "*"
+            "Action": [
+                "iam:CreateRole",
+                "iam:DeleteRole",
+                "iam:GetRole",
+                "iam:PassRole",
+                "iam:AttachRolePolicy",
+                "iam:DetachRolePolicy",
+                "iam:PutRolePolicy",
+                "iam:DeleteRolePolicy",
+                "iam:GetRolePolicy",
+                "iam:CreatePolicy",
+                "iam:DeletePolicy",
+                "iam:GetPolicy",
+                "iam:GetPolicyVersion",
+                "iam:ListPolicyVersions"
+            ],
+            "Resource": [
+                "arn:aws:iam::'"$ACCOUNT_ID"':role/'"$PROJECT_NAME"'*",
+                "arn:aws:iam::'"$ACCOUNT_ID"':policy/'"$PROJECT_NAME"'*"
+            ]
         },
         {
-            "Sid": "S3FullAccess",
+            "Sid": "S3BucketAccess",
             "Effect": "Allow",
-            "Action": ["s3:*"],
-            "Resource": "*"
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject",
+                "s3:ListBucket",
+                "s3:GetBucketLocation",
+                "s3:GetBucketPolicy",
+                "s3:PutBucketPolicy"
+            ],
+            "Resource": [
+                "arn:aws:s3:::'"${PDF_TO_PDF_BUCKET:-placeholder}"'",
+                "arn:aws:s3:::'"${PDF_TO_PDF_BUCKET:-placeholder}"'/*",
+                "arn:aws:s3:::'"${PDF_TO_HTML_BUCKET:-placeholder}"'",
+                "arn:aws:s3:::'"${PDF_TO_HTML_BUCKET:-placeholder}"'/*",
+                "arn:aws:s3:::cdktoolkit-*",
+                "arn:aws:s3:::cdktoolkit-*/*"
+            ]
         },
         {
-            "Sid": "SecretsManagerFullAccess",
+            "Sid": "CloudFormationAccess",
             "Effect": "Allow",
-            "Action": ["secretsmanager:*"],
-            "Resource": "*"
+            "Action": [
+                "cloudformation:CreateStack",
+                "cloudformation:UpdateStack",
+                "cloudformation:DeleteStack",
+                "cloudformation:DescribeStacks",
+                "cloudformation:DescribeStackEvents",
+                "cloudformation:DescribeStackResources",
+                "cloudformation:GetTemplate",
+                "cloudformation:ValidateTemplate",
+                "cloudformation:CreateChangeSet",
+                "cloudformation:DescribeChangeSet",
+                "cloudformation:ExecuteChangeSet",
+                "cloudformation:DeleteChangeSet"
+            ],
+            "Resource": "arn:aws:cloudformation:'"$REGION"':'"$ACCOUNT_ID"':stack/CdkBackendStack/*"
         },
         {
-            "Sid": "CloudFormationFullAccess",
+            "Sid": "CloudTrailAccess",
             "Effect": "Allow",
-            "Action": ["cloudformation:*"],
-            "Resource": "*"
+            "Action": [
+                "cloudtrail:CreateTrail",
+                "cloudtrail:UpdateTrail",
+                "cloudtrail:DeleteTrail",
+                "cloudtrail:DescribeTrails",
+                "cloudtrail:StartLogging",
+                "cloudtrail:StopLogging",
+                "cloudtrail:PutEventSelectors"
+            ],
+            "Resource": "arn:aws:cloudtrail:'"$REGION"':'"$ACCOUNT_ID"':trail/*"
         },
         {
-            "Sid": "CloudTrailFullAccess",
+            "Sid": "EventBridgeAccess",
             "Effect": "Allow",
-            "Action": ["cloudtrail:*"],
-            "Resource": "*"
+            "Action": [
+                "events:PutRule",
+                "events:DeleteRule",
+                "events:DescribeRule",
+                "events:PutTargets",
+                "events:RemoveTargets",
+                "events:ListTargetsByRule"
+            ],
+            "Resource": "arn:aws:events:'"$REGION"':'"$ACCOUNT_ID"':rule/*"
         },
         {
-            "Sid": "EventsFullAccess",
+            "Sid": "CloudWatchLogsAccess",
             "Effect": "Allow",
-            "Action": ["events:*"],
-            "Resource": "*"
-        },
-        {
-            "Sid": "CloudWatchLogsFullAccess",
-            "Effect": "Allow",
-            "Action": ["logs:*"],
-            "Resource": "*"
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+                "logs:DeleteLogGroup"
+            ],
+            "Resource": [
+                "arn:aws:logs:'"$REGION"':'"$ACCOUNT_ID"':log-group:/aws/lambda/*",
+                "arn:aws:logs:'"$REGION"':'"$ACCOUNT_ID"':log-group:/aws/codebuild/*"
+            ]
         },
         {
             "Sid": "STSAccess",
             "Effect": "Allow",
-            "Action": ["sts:GetCallerIdentity", "sts:AssumeRole"],
+            "Action": [
+                "sts:GetCallerIdentity"
+            ],
             "Resource": "*"
+        },
+        {
+            "Sid": "SSMParameterAccess",
+            "Effect": "Allow",
+            "Action": [
+                "ssm:GetParameter",
+                "ssm:GetParameters"
+            ],
+            "Resource": "arn:aws:ssm:'"$REGION"':'"$ACCOUNT_ID"':parameter/cdk-bootstrap/*"
         }
     ]
 }'
