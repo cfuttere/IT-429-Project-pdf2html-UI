@@ -74,83 +74,186 @@ else
     --query 'Role.Arn' --output text)
 
   echo "Attaching custom deployment policy..."
-  CUSTOM_POLICY='{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "AmplifyFullAccess",
-            "Effect": "Allow",
-            "Action": ["amplify:*"],
-            "Resource": "*"
-        },
-        {
-            "Sid": "CognitoFullAccess",
-            "Effect": "Allow",
-            "Action": ["cognito-idp:*", "cognito-identity:*"],
-            "Resource": "*"
-        },
-        {
-            "Sid": "LambdaFullAccess",
-            "Effect": "Allow",
-            "Action": ["lambda:*"],
-            "Resource": "*"
-        },
-        {
-            "Sid": "APIGatewayFullAccess",
-            "Effect": "Allow",
-            "Action": ["apigateway:*"],
-            "Resource": "*"
-        },
-        {
-            "Sid": "IAMFullAccess",
-            "Effect": "Allow",
-            "Action": ["iam:*"],
-            "Resource": "*"
-        },
-        {
-            "Sid": "S3FullAccess",
-            "Effect": "Allow",
-            "Action": ["s3:*"],
-            "Resource": "*"
-        },
-        {
-            "Sid": "SecretsManagerFullAccess",
-            "Effect": "Allow",
-            "Action": ["secretsmanager:*"],
-            "Resource": "*"
-        },
-        {
-            "Sid": "CloudFormationFullAccess",
-            "Effect": "Allow",
-            "Action": ["cloudformation:*"],
-            "Resource": "*"
-        },
-        {
-            "Sid": "CloudTrailFullAccess",
-            "Effect": "Allow",
-            "Action": ["cloudtrail:*"],
-            "Resource": "*"
-        },
-        {
-            "Sid": "EventsFullAccess",
-            "Effect": "Allow",
-            "Action": ["events:*"],
-            "Resource": "*"
-        },
-        {
-            "Sid": "CloudWatchLogsFullAccess",
-            "Effect": "Allow",
-            "Action": ["logs:*"],
-            "Resource": "*"
-        },
-        {
-            "Sid": "STSAccess",
-            "Effect": "Allow",
-            "Action": ["sts:GetCallerIdentity", "sts:AssumeRole"],
-            "Resource": "*"
-        }
-    ]
-}'
+  # FIXED: Restricted IAM permissions to only necessary actions and resources
+  # Original policy granted full access (*) to all services on all resources (*)
+ 
+  
+  # ORIGINAL CODE - REMOVED (Security Issue: Overly Permissive - Full Access to All Resources)
+  # CUSTOM_POLICY='{
+  #   "Version": "2012-10-17",
+  #   "Statement": [
+  #       {
+  #           "Sid": "AmplifyFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["amplify:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "CognitoFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["cognito-idp:*", "cognito-identity:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "LambdaFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["lambda:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "APIGatewayFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["apigateway:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "IAMFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["iam:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "S3FullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["s3:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "SecretsManagerFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["secretsmanager:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "CloudFormationFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["cloudformation:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "CloudTrailFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["cloudtrail:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "EventsFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["events:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "CloudWatchLogsFullAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["logs:*"],
+  #           "Resource": "*"
+  #       },
+  #       {
+  #           "Sid": "STSAccess",
+  #           "Effect": "Allow",
+  #           "Action": ["sts:GetCallerIdentity", "sts:AssumeRole"],
+  #           "Resource": "*"
+  #       }
+  #   ]
+  # }'
+  
+# Build S3 resource list safely (prevents invalid ARNs)
+S3_RESOURCES="\"arn:aws:s3:::cdk-*\", \"arn:aws:s3:::cdk-*/*\""
+
+if [[ -n "${PDF_TO_PDF_BUCKET:-}" ]]; then
+  S3_RESOURCES="$S3_RESOURCES, \"arn:aws:s3:::$PDF_TO_PDF_BUCKET\", \"arn:aws:s3:::$PDF_TO_PDF_BUCKET/*\""
+fi
+
+if [[ -n "${PDF_TO_HTML_BUCKET:-}" ]]; then
+  S3_RESOURCES="$S3_RESOURCES, \"arn:aws:s3:::$PDF_TO_HTML_BUCKET\", \"arn:aws:s3:::$PDF_TO_HTML_BUCKET/*\""
+fi
+
+CUSTOM_POLICY="{
+  \"Version\": \"2012-10-17\",
+  \"Statement\": [
+    {
+      \"Sid\": \"STSBasicAccess\",
+      \"Effect\": \"Allow\",
+      \"Action\": [ \"sts:GetCallerIdentity\" ],
+      \"Resource\": \"*\"
+    },
+    {
+      \"Sid\": \"AssumeCDKRoles\",
+      \"Effect\": \"Allow\",
+      \"Action\": [ \"sts:AssumeRole\" ],
+      \"Resource\": \"arn:aws:iam::*:role/cdk-*\"
+    },
+    {
+      \"Sid\": \"S3Access\",
+      \"Effect\": \"Allow\",
+      \"Action\": [
+        \"s3:GetObject\",
+        \"s3:PutObject\",
+        \"s3:DeleteObject\",
+        \"s3:ListBucket\",
+        \"s3:GetBucketLocation\"
+      ],
+      \"Resource\": [ $S3_RESOURCES ]
+    },
+    {
+      \"Sid\": \"CloudFormationForCDK\",
+      \"Effect\": \"Allow\",
+      \"Action\": [
+        \"cloudformation:CreateStack\",
+        \"cloudformation:UpdateStack\",
+        \"cloudformation:DeleteStack\",
+        \"cloudformation:DescribeStacks\",
+        \"cloudformation:DescribeStackEvents\",
+        \"cloudformation:DescribeStackResources\",
+        \"cloudformation:GetTemplate\",
+        \"cloudformation:ValidateTemplate\",
+        \"cloudformation:CreateChangeSet\",
+        \"cloudformation:DescribeChangeSet\",
+        \"cloudformation:ExecuteChangeSet\",
+        \"cloudformation:DeleteChangeSet\"
+      ],
+      \"Resource\": \"*\"
+    },
+    {
+      \"Sid\": \"LogsForCodeBuildAndLambda\",
+      \"Effect\": \"Allow\",
+      \"Action\": [
+        \"logs:CreateLogGroup\",
+        \"logs:CreateLogStream\",
+        \"logs:PutLogEvents\",
+        \"logs:DescribeLogGroups\",
+        \"logs:DescribeLogStreams\"
+      ],
+      \"Resource\": [
+        \"arn:aws:logs:*:*:log-group:/aws/codebuild/*\",
+        \"arn:aws:logs:*:*:log-group:/aws/lambda/*\"
+      ]
+    },
+    {
+      \"Sid\": \"SSMParametersForCDK\",
+      \"Effect\": \"Allow\",
+      \"Action\": [
+        \"ssm:GetParameter\",
+        \"ssm:GetParameters\"
+      ],
+      \"Resource\": \"arn:aws:ssm:*:*:parameter/cdk-bootstrap/*\"
+    },
+    {
+      \"Sid\": \"AmplifyDeploymentAccess\",
+      \"Effect\": \"Allow\",
+      \"Action\": [
+        \"amplify:CreateDeployment\",
+        \"amplify:StartDeployment\",
+        \"amplify:UpdateBranch\"
+      ],
+      \"Resource\": [
+        \"arn:aws:amplify:*:*:apps/*\",
+        \"arn:aws:amplify:*:*:apps/*/branches/*\"
+      ]
+    }
+  ]
+}"
+
 
   aws iam put-role-policy \
     --role-name "$ROLE_NAME" \
@@ -209,12 +312,12 @@ BACKEND_ENVIRONMENT="$BACKEND_ENVIRONMENT"'}'
 # Backend buildspec
 BACKEND_SOURCE='{
   "type":"GITHUB",
-  "location":"https://github.com/ASUCICREPO/PDF_accessability_UI.git",
+  "location":"https://github.com/cfuttere/IT-429-Project-pdf2html-UI.git",
   "buildspec":"buildspec.yml"
 }'
 
 ARTIFACTS='{"type":"NO_ARTIFACTS"}'
-SOURCE_VERSION="updatedUI"
+SOURCE_VERSION="Futterer"
 
 echo "Creating Backend CodeBuild project '$BACKEND_PROJECT_NAME'..."
 aws codebuild create-project \
