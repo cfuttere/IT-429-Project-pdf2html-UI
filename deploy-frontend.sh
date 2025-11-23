@@ -168,7 +168,9 @@ FRONTEND_SOURCE='{
 }'
 
 ARTIFACTS='{"type":"NO_ARTIFACTS"}'
-SOURCE_VERSION="updatedUI"
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+SOURCE_VERSION="${CURRENT_BRANCH}"
+echo "Using branch: $SOURCE_VERSION"
 
 echo "Creating Frontend CodeBuild project '$FRONTEND_PROJECT_NAME'..."
 aws codebuild create-project \
