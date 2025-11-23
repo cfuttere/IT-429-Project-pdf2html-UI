@@ -215,7 +215,10 @@ BACKEND_SOURCE='{
 }'
 
 ARTIFACTS='{"type":"NO_ARTIFACTS"}'
-SOURCE_VERSION="Main"
+# Get current git branch name
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+SOURCE_VERSION="${Mohamed}"
+echo "Using branch: $SOURCE_VERSION"
 
 echo "Creating Backend CodeBuild project '$BACKEND_PROJECT_NAME'..."
 aws codebuild create-project \
