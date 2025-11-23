@@ -160,7 +160,7 @@ else
 
   echo "✓ IAM role created"
   echo "Waiting for IAM role to propagate for 10 seconds..."
-  sleep 10
+  sleep 30 
 fi
 
 # --------------------------------------------------
@@ -215,7 +215,7 @@ BACKEND_SOURCE='{
 }'
 
 ARTIFACTS='{"type":"NO_ARTIFACTS"}'
-SOURCE_VERSION="Mohamed"
+SOURCE_VERSION="Main"
 
 echo "Creating Backend CodeBuild project '$BACKEND_PROJECT_NAME'..."
 aws codebuild create-project \
