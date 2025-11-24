@@ -215,9 +215,7 @@ BACKEND_SOURCE='{
 }'
 
 ARTIFACTS='{"type":"NO_ARTIFACTS"}'
-# Get current git branch name
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-SOURCE_VERSION="${CURRENT_BRANCH}"
+SOURCE_VERSION="Mohamed"
 echo "Using branch: $SOURCE_VERSION"
 
 echo "Creating Backend CodeBuild project '$BACKEND_PROJECT_NAME'..."

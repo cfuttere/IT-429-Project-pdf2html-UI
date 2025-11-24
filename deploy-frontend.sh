@@ -168,8 +168,7 @@ FRONTEND_SOURCE='{
 }'
 
 ARTIFACTS='{"type":"NO_ARTIFACTS"}'
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-SOURCE_VERSION="${CURRENT_BRANCH}"
+SOURCE_VERSION="Mohamed"
 echo "Using branch: $SOURCE_VERSION"
 
 echo "Creating Frontend CodeBuild project '$FRONTEND_PROJECT_NAME'..."
