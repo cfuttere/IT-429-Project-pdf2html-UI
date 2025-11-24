@@ -133,7 +133,7 @@ export class CdkBackendStack extends cdk.Stack {
         requireDigits: true,
         requireSymbols: true, // CHANGE
         requireUppercase: true, // CHANGE
-         tempPasswordValidity: cdk.Duration.days(7) //Updated
+         tempPasswordValidity: cdk.Duration.days(7)
       },
       standardAttributes: {
         email: { required: true, mutable: true },
